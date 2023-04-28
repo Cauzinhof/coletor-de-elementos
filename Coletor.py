@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup
 import ssl
 import pandas as pd
 import simplekml
-import time
 
 # Ignorar erros de certificado SSL
 
