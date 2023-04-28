@@ -66,7 +66,6 @@ for page in range(1,6):
         url = 'https://www.infoimoveis.com.br/busca/venda/terreno/ms/campo-grande/'+bairro_link+'?pagina='+str(page)
     else:
         url = 'https://www.infoimoveis.com.br/busca/venda/terreno/ms/'+cidade_link+'?pagina='+str(page)
-        print(url)
     soup = coletahtml(url)
     hrefs = soup('a')
  
