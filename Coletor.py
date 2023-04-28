@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import ssl
 import pandas as pd
 import simplekml
+import time
 
 # Ignorar erros de certificado SSL
 
@@ -16,7 +17,7 @@ ctx.verify_mode = ssl.CERT_NONE
 def coletahtml(url):
 
     req=Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-    html = urlopen(req, timeout=1000).read()
+    html = urlopen(req,timeout=10).read()
     soup = BeautifulSoup(html, 'html.parser')
     return soup
 
@@ -25,7 +26,7 @@ def adequa_p_link(value):
     value_link=''
     for i in aux:
         value_link += i + '-'
-    value_link.rstrip('-')
+    value_link = value_link.rstrip('-')
     return value_link
 
 with open('cidades.txt', 'r') as arquivo:
@@ -66,6 +67,7 @@ for page in range(1,6):
         url = 'https://www.infoimoveis.com.br/busca/venda/terreno/ms/campo-grande/'+bairro_link+'?pagina='+str(page)
     else:
         url = 'https://www.infoimoveis.com.br/busca/venda/terreno/ms/'+cidade_link+'?pagina='+str(page)
+        print(url)
     soup = coletahtml(url)
     hrefs = soup('a')
  
