@@ -68,7 +68,6 @@ for page in range(1,6):
         url = 'https://www.infoimoveis.com.br/busca/venda/terreno/ms/'+cidade_link+'?pagina='+str(page)
     soup = coletahtml(url)
     hrefs = soup('a')
-    print(hrefs)
  
     #Filtrar apenas as tags com link de venda de terreno
     for tag in hrefs:
