@@ -5,6 +5,52 @@ import ssl
 import pandas as pd
 import simplekml
 
+class Terreno:
+    dados = {'Area (m2)': [], 'Valor':[], 'Localizacao':[], 'Link':[]} #Criando o DF
+
+    def gera_kml(city):
+        index = 1
+        kml=simplekml.Kml()
+        for item in Terreno.dados['Localizacao']:
+            item=item.split(',')
+            lat=item[0]
+            lon = item[1]
+            kml.newpoint(name=index, coords=[(lon,lat)])
+            index += 1   
+        if city == 'campo grande': kml.save('Elementos '+bairro.title()+'.kml')
+        else: kml.save('Elementos '+city.title()+'.kml')
+
+    def get_area(html):
+        html = html.find_all('td')
+        for i in html:
+            i=str(i)
+            if ' m²' in i:
+                area = i.lstrip('<td>').rstrip(' m²</td>')
+                break
+        Terreno.dados['Area (m2)'].append(area)
+
+    def get_valor(html):
+        html = html.find_all('span')
+        for i in html:
+            i=str(i)
+            if i != None and 'R$' in i:
+                valor = i.lstrip('<span class="valor">').rstrip('</span>')
+                break
+        Terreno.dados['Valor'].append(valor)
+    
+    def get_linkloc(tags):
+        loc = None
+        for i in tags:
+            if i.get('onclick') == None: continue
+            if 'posiciona' in i.get('onclick'):
+                loc = i.get('onclick').split('(')[1]
+                loc = loc[:len(loc)-1]
+                break
+        if loc != None:
+            Terreno.dados['Link'].append(url)
+            Terreno.dados['Localizacao'].append(loc)
+        return loc
+
 # Ignorar erros de certificado SSL
 
 ctx = ssl.create_default_context()
@@ -28,17 +74,19 @@ def adequa_p_link(value):
     value_link = value_link.rstrip('-')
     return value_link
 
+def header():
+    print('##########################################')
+    print('\n\n   Desenvolvido por Carlos Fernandes\n\n')
+    print('##########################################\n')
+    print(u'Para usar esta aplicação, não use acentos ou cedilha!\n')
+
 with open('cidades.txt', 'r') as arquivo:
     cidades= [i.rstrip('\n') for i in arquivo]
 
 with open('bairros.txt', 'r') as arquivo:
     bairros= [i.rstrip('\n') for i in arquivo]
 
-print('##########################################')
-print('\n\n   Desenvolvido por Carlos Fernandes\n\n')
-print('##########################################\n')
-
-print(u'Para usar esta aplicação, não use acentos ou cedilha!\n')
+header()
 
 while True:
     city = input('Insira a cidade: ').lower()
@@ -77,67 +125,31 @@ for page in range(1,6):
                 links.append(tag.get('href', None))
 
 if links != []:
-    dados = {'Area (m2)': [], 'Valor':[], 'Localizacao':[], 'Link':[]} #Criando o DF
     print('Coletando terrenos em '+city.title()+'. Por favor, aguarde...\n')
         
         #Aqui coletaremos a localização dos links extraídos
     for l in links:
         url = l
         tags = coletahtml(url).find_all('button')
-        loc = None
-        for i in tags:
-            if i.get('onclick') == None: continue
-            if 'posiciona' in i.get('onclick'):
-                loc = i.get('onclick').split('(')[1]
-                loc = loc[:len(loc)-1]
-                break
-        if loc == None: #Se não tiver localizacao
-            continue
-        dados['Link'].append(url)
-        dados['Localizacao'].append(loc)
+        loc = Terreno.get_linkloc(tags)
 
-            #Aqui coletaremos a area
+            #Aqui coletaremos a area e o valor
         if loc != None:
-            infoimovel = coletahtml(url).find_all('td')
-            for i in infoimovel:
-                i=str(i)
-                if ' m²' in i:
-                    area = i.lstrip('<td>').rstrip(' m²</td>')
-                    break
-            dados['Area (m2)'].append(area)
-        
-            #Aqui coletaremos o valor
-        if loc != None:
-            infoimovel = coletahtml(url).find_all('span')
-            for i in infoimovel:
-                i=str(i)
-                if i != None and 'R$' in i:
-                    valor = i.lstrip('<span class="valor">').rstrip('</span>')
-                    break
-            dados['Valor'].append(valor)
-
+            infoimovel = coletahtml(url)
+            Terreno.get_area(infoimovel)
+            Terreno.get_valor(infoimovel)
+            
         #Criando o dataframe e salvando como .xlsx        
-    df = pd.DataFrame(dados)
+    df = pd.DataFrame(Terreno.dados)
     df.index += 1
     if city == 'campo grande': df.to_excel('Elementos '+bairro.title()+'.xlsx',index_label='#')
     else: df.to_excel('Elementos '+city.title()+'.xlsx',index_label='#')
         
-        #Criando o arquivo KML
-    index = 1
-    kml=simplekml.Kml()
-    for item in dados['Localizacao']:
-        item=item.split(',')
-        lat=item[0]
-        lon = item[1]
-        kml.newpoint(name=index, coords=[(lon,lat)])
-        index +=1
-        
-    if city == 'campo grande': kml.save('Elementos '+bairro.title()+'.kml')
-    else: kml.save('Elementos '+city.title()+'.kml')
+    Terreno.gera_kml(city)     
 
     print('Elementos coletados\nArquivos EXCEL e KML salvos na pasta\nObrigado!\n')
 
-else: print(u'Poxa! Não há elementos para coleta nesse lugar. Boa sorte =/.')
+else: print(u'Poxa! Não há elementcos para coleta nesse lugar. Boa sorte =/.')
     
 while True:
     if input('Pressione Enter para sair') != None : break #Finalização
