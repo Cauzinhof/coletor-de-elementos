@@ -54,16 +54,11 @@ class VerificadorLocal:
 
 class PegaURL():
     def __init__(self, local):
-        local_link = self.adequa_p_link(local)
+        self.local_link = self.adequa_p_link(local)
 
     def adequa_p_link(self, value):
-            aux = value.split()
-            value_link=''
-            for i in aux:
-                value_link += i + '-'
-            value_link = value_link.rstrip('-')
+            value_link = value.replace(" ",'-')
             return value_link
 
-
 local = VerificadorLocal().get_local()
-PegaURL(local)
+PegaURL(local).local_link
