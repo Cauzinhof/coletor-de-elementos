@@ -115,6 +115,7 @@ class Coletor:
 
     def get_area(self, html):
         html = html.find_all('td')
+        area = '0'
         for i in html:
             i=str(i)
             if ' m²' in i:
